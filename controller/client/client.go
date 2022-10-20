@@ -3,7 +3,7 @@ package client
 import (
 	"github.com/knullhhf/hack22/common"
 	"github.com/knullhhf/hack22/controller"
-	"github.com/knullhhf/hack22/models/client"
+	"github.com/knullhhf/hack22/models/dto"
 	"github.com/knullhhf/hack22/pkg/server"
 	"github.com/knullhhf/hack22/pkg/utils/mapper"
 )
@@ -24,7 +24,7 @@ func (c *ClientController) Post() {
 func (c *ClientController) ListClient() {
 	clients := server.LightningServer.ListWriteClient()
 
-	var clientDtos []*client.ClientDto
+	var clientDtos []*dto.ClientDto
 	mapper.Copy(&clientDtos, &clients)
 	c.SuccessResp(clientDtos)
 }

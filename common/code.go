@@ -17,6 +17,7 @@ const (
 	APISuccess          Code = 0
 	APISystemError      Code = 10000
 	APICodeNotFoundPath Code = 10001
+	APIParameterError   Code = 10002
 )
 
 const (

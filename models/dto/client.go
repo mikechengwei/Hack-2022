@@ -1,4 +1,4 @@
-package client
+package dto
 
 type ClientDto struct {
 	Name string
