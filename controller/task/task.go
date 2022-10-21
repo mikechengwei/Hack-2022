@@ -22,6 +22,8 @@ func (t *TaskController) Post() {
 		t.CreateTask()
 	case "listTasks":
 		t.ListTask()
+	case "startTask":
+		t.StartTask()
 	default:
 		t.ErrorResp("action不支持", common.APICodeNotFoundPath, common.Newf("动作不支持"))
 	}
@@ -69,4 +71,11 @@ func (t *TaskController) ListTask() {
 }
 
 func (t *TaskController) StartTask() {
+	var request *dto.StartTaskRequestDto
+	if err := json.Unmarshal(t.Ctx.Input.RequestBody, &request); err != nil {
+		t.ErrorResp(nil, common.APIParameterError, err)
+		return
+	}
+	go service.TaskServiceImplement.StartTask(request.TaskId)
+	t.SuccessResp(nil)
 }

@@ -6,6 +6,8 @@ CREATE TABLE `hackathon_datasource`
     `port`             varchar(255) NOT NULL DEFAULT '' COMMENT '端口',
     `username`         varchar(255) NOT NULL DEFAULT '' COMMENT '用户名',
     `password`         varchar(255) NOT NULL DEFAULT '' COMMENT '密码',
+    `statusPort`         varchar(255) NOT NULL DEFAULT '' COMMENT '状态端口',
+    `pdAddress`         varchar(255) NOT NULL DEFAULT '' COMMENT 'pd地址',
     `type`             int(4) NOT NULL DEFAULT 0 COMMENT '数据库源类型',
     `id`               bigint(21) NOT NULL AUTO_INCREMENT COMMENT '应用自增id',
     `created_at`       datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

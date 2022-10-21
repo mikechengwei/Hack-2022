@@ -7,17 +7,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var logger *logrus.Logger
+var Logger *logrus.Logger
 
 func InitLog() {
-	logger = logrus.New()
+	Logger = logrus.New()
 
 }
 func getLogger() *logrus.Entry {
-	if logger == nil {
+	if Logger == nil {
 		panic("logger is not init")
 	}
-	return logger.WithContext(context.WithValue(context.Background(), "sendToFile", true))
+	return Logger.WithContext(context.WithValue(context.Background(), "sendToFile", true))
 }
 
 func LogErrf(format string, v ...interface{}) {

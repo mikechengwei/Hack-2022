@@ -6,7 +6,6 @@ import (
 	"fmt"
 	. "github.com/knullhhf/hack22/logger"
 	msg2 "github.com/knullhhf/hack22/pkg/net/msg"
-	"github.com/knullhhf/hack22/pkg/utils"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"net"
@@ -59,7 +58,9 @@ func (cc *Client) Init(serverAddress, clientAddress, name string) error {
 		return fmt.Errorf("subscribe server grpc err:%v", err)
 	}
 	serverGrpcTool := msg2.NewToolsManagerClient(cn)
-	key := utils.GenerateClientUUid()
+	//key := utils.GenerateClientUUid()
+	key := "56862fbd-6eab-4b9f-8bc2-ccd576b078a6"
+	print(key)
 	cc.info = msg2.ClientInfo{
 		Name:    name,
 		Key:     key,
@@ -79,7 +80,7 @@ func (cc *Client) Register() error {
 		return err
 	}
 	if replay.Rc.Rc == msg2.RespCode_rc_OK {
-		LogInfof("Register success")
+		LogInfo("Register success")
 		return nil
 	}
 	return nil

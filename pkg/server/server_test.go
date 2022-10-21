@@ -84,7 +84,7 @@ func TestRunning(t *testing.T) {
 	}
 
 	// create task
-	LightningServer.addTask(&task)
-	LightningServer.addTask(&task2)
+	LightningServer.AddTask(&task)
+	LightningServer.AddTask(&task2)
 	time.Sleep(1000000 * time.Second)
 }

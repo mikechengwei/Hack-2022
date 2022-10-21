@@ -11,7 +11,7 @@ sorted-kv-dir = "/Users/mikechengwei/Downloads/lightning/sst"
 
 [mydumper]
 # 源数据目录。
-data-source-dir = "/Users/mikechengwei/Downloads/env_table"
+# data-source-dir = "/Users/mikechengwei/Downloads/env_table"
 
 # 配置通配符规则，默认规则会过滤 mysql、sys、INFORMATION_SCHEMA、PERFORMANCE_SCHEMA、METRICS_SCHEMA、INSPECTION_SCHEMA 系统数据库下的所有表
 # 若不配置该项，导入系统表时会出现“找不到 schema”的异常

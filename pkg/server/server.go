@@ -151,13 +151,13 @@ func (server *Server) importData(task *task2.MigrateTask) {
 	}
 	procedure, err := restore.NewRestoreController(ctx, task.Config, param)
 	if err != nil {
-		log.L().Error("restore failed", log.ShortError(err))
+		Logger.Errorf("restore failed:%v", err)
 		return
 	}
 	defer procedure.Close()
 	err = procedure.Run(ctx)
 	if err != nil {
-		LogErrf("migrate task error:%v", err)
+		Logger.Errorf("migrate task error:%v", err)
 	}
 }
 
@@ -174,7 +174,7 @@ func (server *Server) reportLoop() {
 	server.wg.Done()
 }
 
-func (server *Server) addTask(task *task2.MigrateTask) error {
+func (server *Server) AddTask(task *task2.MigrateTask) error {
 	cli, ok := server.writerClients[task.ClientName]
 	if !ok {
 		//
@@ -247,7 +247,7 @@ func (server *Server) handle() {
 		}
 	}
 }
-func (server *Server) findCli(name, key string) (*WriterClient, error) {
+func (server *Server) FindCli(name string) (*WriterClient, error) {
 	server.cliMtx.Lock()
 	lcli, ok := server.writerClients[name]
 	server.cliMtx.Unlock()
@@ -283,7 +283,7 @@ func (server *Server) Register(ctx context.Context, in *msg2.ReqRegister) (*msg2
 }
 
 func (server *Server) newTask(cli *msg2.ClientInfo, t *msg2.TaskInfo) {
-	obj, err := server.findCli(cli.GetName(), cli.GetKey())
+	obj, err := server.FindCli(cli.GetKey())
 	if err != nil {
 		err := fmt.Errorf("findCli(%s) err:%w", cli.GetName(), err)
 		LogErrf(err.Error())
@@ -307,7 +307,7 @@ func (server *Server) newTask(cli *msg2.ClientInfo, t *msg2.TaskInfo) {
 }
 
 func (server *Server) startTask(cli *msg2.ClientInfo, t *msg2.TaskInfo) {
-	obj, err := server.findCli(cli.GetName(), cli.GetKey())
+	obj, err := server.FindCli(cli.GetKey())
 	if err != nil {
 		err := fmt.Errorf("findCli(%s) err:%w", cli.GetName(), err)
 		LogErrf(err.Error())

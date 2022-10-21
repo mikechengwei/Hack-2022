@@ -37,13 +37,13 @@ func (ts *TaskService) NewTask(ctx context.Context, in *msg2.ReqNewTask) (*msg2.
 		return nil, fmt.Errorf("dial '%s' err:%s", in.GetCli().GetAddress(), err.Error())
 	}
 
-	k := net2.SocketKey(in.Cli.Name, in.Task.Key)
+	k := net2.SocketKey(in.Cli.Key, in.Task.Key)
 	_, err = tc.Write([]byte(k))
 	if err != nil {
 		return nil, fmt.Errorf("write err:%w", err)
 	}
 
-	logger.LogTracef("write key '%s'", k)
+	logger.LogInfof("write key '%s'", k)
 	ct := cliTask{
 		name:  in.Task.Name,
 		con:   tc,

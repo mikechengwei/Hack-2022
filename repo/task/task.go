@@ -12,6 +12,8 @@ type TaskRepoInterface interface {
 	CreateTask(task *entity.Task) error
 
 	ListTask(pageNumber int, name string) ([]*entity.Task, *int64, error)
+
+	GetTask(taskId int) (result *entity.Task, err error)
 }
 type TaskRepo struct {
 }
@@ -32,4 +34,9 @@ func (t *TaskRepo) ListTask(pageNumber int, name string) ([]*entity.Task, *int64
 		return nil, nil, err
 	}
 	return results, &total, r
+}
+
+func (t *TaskRepo) GetTask(taskId int) (result *entity.Task, err error) {
+	err = repo.GetDB().Where("id = ?", taskId).Find(&result).Error
+	return result, err
 }
