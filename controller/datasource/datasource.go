@@ -18,7 +18,7 @@ func (d *DataSourceController) Post() {
 		d.ListDataSource()
 	case "ListDataBase":
 		d.ListDataBase()
-	case "ListTables":
+	case "listTables":
 		d.ListTables()
 	default:
 		d.ErrorResp("action不支持", common.APICodeNotFoundPath, common.Newf("动作不支持"))
