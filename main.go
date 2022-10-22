@@ -18,5 +18,5 @@ func main() {
 	}
 
 	go server.RunServer()
-	beego.Run(":8080")
+	beego.Run(":80")
 }
