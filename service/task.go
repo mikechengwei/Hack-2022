@@ -149,7 +149,6 @@ func (t *TaskService) StartTask(taskId int) error {
 		targetDatabase = task.TargetDatabase
 	}
 	for _, table := range tables {
-
 		migrateTask := &task3.MigrateTask{
 			ClientName: cli,
 			Name:       task.Name,
@@ -159,7 +158,9 @@ func (t *TaskService) StartTask(taskId int) error {
 				Port:     int32(sourcePort),
 				Username: sourceDataSource[0].Username,
 				Password: sourceDataSource[0].Password,
+				Type:     sourceDataSource[0].Type,
 				Database: task.SourceDatabase, Name: table,
+				ServiceName: sourceDataSource[0].ServiceName,
 			},
 			Target: &task3.TableInfo{
 				Database: targetDatabase, Name: table,

@@ -27,6 +27,8 @@ message TableInfo {
   string password = 4;
   string db = 5;
   string tbl = 6;
+  int32 type = 7;
+  string  serviceName=8;
 }
 
 enum RespCode{

@@ -109,10 +109,7 @@ func RunClient() {
 	wg.Wait()
 	err = client.Register()
 	if err != nil {
-		LogFatalf("Regist err:%s", err.Error())
+		LogErrf("Regist err:%s", err.Error())
 	}
-
-	wg.Add(1)
-	wg.Wait()
 
 }

@@ -3,12 +3,14 @@ package client
 import (
 	"context"
 	"fmt"
+	beego "github.com/beego/beego/v2/server/web"
 	"github.com/knullhhf/hack22/logger"
+	"github.com/knullhhf/hack22/models/enum"
 	net2 "github.com/knullhhf/hack22/pkg/net"
 	msg2 "github.com/knullhhf/hack22/pkg/net/msg"
 	storage2 "github.com/knullhhf/hack22/pkg/net/storage"
+	"github.com/knullhhf/hack22/pkg/oracle"
 	"github.com/pingcap/tidb/dumpling/export"
-	"go.uber.org/zap"
 	"net"
 	"os"
 	"sync"
@@ -79,39 +81,68 @@ func (ts *TaskService) ReportState(ctx context.Context, in *msg2.ReqReport) (*ms
 func (cc *TaskService) DumpTableData(task *cliTask) {
 	logger.LogInfof("DumpData(%s) waiting write signals....", task.name)
 	cc.writeSignals[task.name].Wait()
-	conf := export.DefaultConfig()
-	logger.LogInfof("DumpData(%s) start write ....", task.name)
 	extStorage := &storage2.SocketStorage{
 		Writer: &storage2.SocketStorageWriter{
 			Connection: task.con,
 		},
 	}
-	conf.User = task.info.Source.Username
-	conf.Password = task.info.Source.Password
-	conf.Port = int(task.info.Source.Port)
-	conf.Host = task.info.Source.Host
-	conf.SQL = fmt.Sprintf("select * from `%s`.`%s`", task.info.Source.Db, task.info.Source.Tbl)
-	conf.FileType = "csv"
-	conf.ExtStorage = extStorage
-	conf.CsvSeparator = ","
-	conf.CsvDelimiter = "\""
-	conf.StatementSize = 2000000
-	conf.FileSize = 1024 * 1024 * 1024 //need to justify
-	ctx := context.TODO()
-	dumper, err := export.NewDumper(ctx, conf)
-	if err != nil {
-		fmt.Printf("\ncreate dumper failed: %s\n", err.Error())
-		os.Exit(1)
-	}
-	err = dumper.Dump()
-	//time.Sleep(60 * time.Second)
-	task.con.Close()
-	if err != nil {
-		dumper.L().Error("dump failed error stack info", zap.Error(err))
-		fmt.Printf("\ndump failed: %s\n", err.Error())
-		os.Exit(1)
+
+	//oracle dump
+	if enum.DataSourceMap[task.info.Source.Type] == enum.Oracle {
+
+		libdir, err := beego.AppConfig.String("oracle.libdir")
+		if len(libdir) == 0 || err != nil {
+			return
+		}
+		conf := oracle.DefaultConfig()
+		conf.Username = task.info.Source.Username
+		conf.Password = task.info.Source.Password
+		conf.Host = task.info.Source.Host
+		conf.Port = int(task.info.Source.Port)
+		conf.ServiceName = task.info.Source.ServiceName
+		conf.LibDir = libdir
+		conf.ConnectParams = "poolMinSessions=50&poolMaxSessions=1000&poolWaitTimeout=360s&poolSessionMaxLifetime=2h&poolSessionTimeout=2h&poolIncrement=30&timezone=Local&connect_timeout=15"
+		conf.Separator = ","
+		conf.Delimiter = "\""
+		conf.SQL = fmt.Sprintf("select * from %s.%s", task.info.Source.Db, task.info.Source.Tbl)
+		conf.ExtStorage = extStorage
+		ctx := context.TODO()
+		err = oracle.NewDumper(ctx, conf).Dump()
+		task.con.Close()
+		if err != nil {
+			logger.LogErrf("oracle dump err:%v", err)
+		}
+		logger.LogInfo("close connection success")
 	}
 
-	logger.LogInfo("close connection success")
+	//mysql dump
+	if enum.DataSourceMap[task.info.Source.Type] == enum.Mysql {
+		conf := export.DefaultConfig()
+		logger.LogInfof("DumpData(%s) start write ....", task.name)
+		conf.User = task.info.Source.Username
+		conf.Password = task.info.Source.Password
+		conf.Port = int(task.info.Source.Port)
+		conf.Host = task.info.Source.Host
+		conf.SQL = fmt.Sprintf("select * from `%s`.`%s`", task.info.Source.Db, task.info.Source.Tbl)
+		conf.FileType = "csv"
+		conf.ExtStorage = extStorage
+		conf.CsvSeparator = ","
+		conf.CsvDelimiter = "\""
+		conf.StatementSize = 2000000
+		conf.FileSize = 1024 * 1024 * 1024 //need to justify
+		ctx := context.TODO()
+		dumper, err := export.NewDumper(ctx, conf)
+		if err != nil {
+			fmt.Printf("\ncreate dumper failed: %s\n", err.Error())
+			os.Exit(1)
+		}
+		err = dumper.Dump()
+		task.con.Close()
+		if err != nil {
+			logger.LogErrf("mysql dump error:%v", err)
+		}
+
+		logger.LogInfo("close connection success")
+	}
 
 }

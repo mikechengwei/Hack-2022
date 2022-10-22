@@ -23,10 +23,12 @@ type MigrateTask struct {
 }
 
 type TableInfo struct {
-	Host     string
-	Port     int32
-	Username string
-	Password string
-	Database string
-	Name     string
+	Host        string
+	Port        int32
+	Username    string
+	Password    string
+	Database    string
+	Name        string
+	Type        int
+	ServiceName string
 }
