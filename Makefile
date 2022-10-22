@@ -10,7 +10,7 @@ endif
 export GO111MODULE := on
 GOOS := $(if $(GOOS),$(GOOS),linux)
 GOARCH := $(if $(GOARCH),$(GOARCH),amd64)
-GOENV  := GO15VENDOREXPERIMENT="1" CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH)
+GOENV  := GO15VENDOREXPERIMENT="1" CGO_ENABLED="1" GOOS=$(GOOS) GOARCH=$(GOARCH)
 GO     := $(GOENV) go
 GO_BUILD := $(GO) build -trimpath
 GO_SUBMODULE_DIRS = pkg/apis pkg/client

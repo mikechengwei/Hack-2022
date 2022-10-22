@@ -28,7 +28,7 @@ message TableInfo {
   string db = 5;
   string tbl = 6;
   int32 type = 7;
-  string  serviceName=8;
+  string  serviceName = 8;
 }
 
 enum RespCode{
@@ -75,4 +75,10 @@ message  ReplyReport{
   replyBase rc = 1;
   TaskState  state = 2;
   string progress = 3;
+}
+
+message ReportTaskState{
+  ClientInfo cli = 1;
+  TaskInfo task = 2;
+  TaskState state = 3;
 }

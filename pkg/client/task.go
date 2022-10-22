@@ -49,14 +49,14 @@ func (ts *TaskService) NewTask(ctx context.Context, in *msg2.ReqNewTask) (*msg2.
 	ct := cliTask{
 		name:  in.Task.Name,
 		con:   tc,
-		info:  *in.Task,
+		info:  in.Task,
 		state: msg2.TaskState_ts_Create,
 	}
 	ts.tasks[ct.name] = &ct
 	//
 	ts.writeSignals[in.Task.Name] = &sync.WaitGroup{}
 	ts.writeSignals[in.Task.Name].Add(1)
-	go ts.DumpTableData(&ct)
+	go ts.DumpTableData(&ct, in.Cli)
 	return &msg2.ReplyNewTask{Rc: net2.DefaultOkReplay()}, nil
 }
 
@@ -65,6 +65,17 @@ func (ts *TaskService) StartTask(ctx context.Context, in *msg2.ReqNewTask) (*msg
 	logger.LogTraceJsonf("StartTask %s", in)
 	ts.writeSignals[in.Task.Name].Done()
 	return &msg2.ReplyNewTask{Rc: net2.DefaultOkReplay()}, nil
+}
+
+func (ts *TaskService) ReportTaskState(ctx context.Context, in *msg2.ReportTaskState) (*msg2.ReplyReport, error) {
+	t := ts.tasks[in.GetTask().GetName()]
+
+	rr := msg2.ReplyReport{
+		Rc:       net2.DefaultOkReplay(),
+		State:    t.state,
+		Progress: t.progress,
+	}
+	return &rr, nil
 }
 
 func (ts *TaskService) ReportState(ctx context.Context, in *msg2.ReqReport) (*msg2.ReplyReport, error) {
@@ -78,7 +89,7 @@ func (ts *TaskService) ReportState(ctx context.Context, in *msg2.ReqReport) (*ms
 	return &rr, nil
 }
 
-func (cc *TaskService) DumpTableData(task *cliTask) {
+func (cc *TaskService) DumpTableData(task *cliTask, cli *msg2.ClientInfo) {
 	logger.LogInfof("DumpData(%s) waiting write signals....", task.name)
 	cc.writeSignals[task.name].Wait()
 	extStorage := &storage2.SocketStorage{
@@ -87,6 +98,7 @@ func (cc *TaskService) DumpTableData(task *cliTask) {
 		},
 	}
 
+	state := msg2.TaskState_ts_Finish
 	//oracle dump
 	if enum.DataSourceMap[task.info.Source.Type] == enum.Oracle {
 
@@ -110,8 +122,10 @@ func (cc *TaskService) DumpTableData(task *cliTask) {
 		err = oracle.NewDumper(ctx, conf).Dump()
 		task.con.Close()
 		if err != nil {
+			state = msg2.TaskState_ts_Exception
 			logger.LogErrf("oracle dump err:%v", err)
 		}
+
 		logger.LogInfo("close connection success")
 	}
 
@@ -139,10 +153,16 @@ func (cc *TaskService) DumpTableData(task *cliTask) {
 		err = dumper.Dump()
 		task.con.Close()
 		if err != nil {
+			state = msg2.TaskState_ts_Exception
 			logger.LogErrf("mysql dump error:%v", err)
 		}
 
 		logger.LogInfo("close connection success")
 	}
+	client.ReportTaskState(&msg2.ReportTaskState{
+		Task:  task.info,
+		Cli:   cli,
+		State: state,
+	})
 
 }

@@ -9,4 +9,6 @@ import "msg.proto";
 service ToolsManager {
   // Sends a greeting
   rpc Register (ReqRegister) returns (ReplyRegister) {}
+
+  rpc ReportTaskCurrentState (ReportTaskState) returns (ReplyReport) {}
 }

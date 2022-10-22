@@ -192,11 +192,11 @@ func (server *Server) AddTask(task *task2.MigrateTask) error {
 		return nil
 	}
 
-	_, ok = cli.FinishedTasks[task.Key]
-	if ok {
-		LogInfof("the task(%s) is finished", task.Name)
-		return nil
-	}
+	//_, ok = cli.FinishedTasks[task.Key]
+	//if ok {
+	//	LogInfof("the task(%s) is finished", task.Name)
+	//	return nil
+	//}
 	cli.PendingTasks[task.Name] = task
 	task.WriterSource = &storage2.SocketStorage{Reader: &storage2.SocketStorageReader{TaskManagerClient: cli.TaskManagerClient, TaskInfo: &msg2.ReqNewTask{
 		Cli: cli.Client,
@@ -284,6 +284,16 @@ func (server *Server) Register(ctx context.Context, in *msg2.ReqRegister) (*msg2
 	server.cliMtx.Unlock()
 	LogInfof("new client(%s) registered", client.GetName())
 	return &msg2.ReplyRegister{Rc: net2.DefaultOkReplay()}, nil
+}
+
+func (server *Server) ReportTaskCurrentState(ctx context.Context, in *msg2.ReportTaskState) (*msg2.ReplyReport, error) {
+	// change state to task;
+	ct := server.writerClients[in.Cli.Key]
+
+	ct.FinishedTasks[in.Task.Name] = ct.RunningTasks[in.Task.Name]
+	ct.FinishedTasks[in.Task.Name].DumpState = in.State
+	delete(ct.RunningTasks, in.Task.Name)
+	return &msg2.ReplyReport{Rc: net2.DefaultOkReplay()}, nil
 }
 
 func (server *Server) newTask(cli *msg2.ClientInfo, t *msg2.TaskInfo) {

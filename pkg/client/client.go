@@ -26,7 +26,7 @@ type Client struct {
 type cliTask struct {
 	name     string
 	con      net.Conn
-	info     msg2.TaskInfo
+	info     *msg2.TaskInfo
 	state    msg2.TaskState
 	progress string
 }
@@ -81,6 +81,19 @@ func (cc *Client) Register() error {
 	}
 	if replay.Rc.Rc == msg2.RespCode_rc_OK {
 		LogInfo("Register success")
+		return nil
+	}
+	return nil
+}
+
+func (cc *Client) ReportTaskState(state *msg2.ReportTaskState) error {
+	replay, err := cc.serverGrpcTool.ReportTaskCurrentState(cc.ctx, state)
+	if err != nil {
+		LogInfof("report task[%s] err:%s", cc.info.Name, err.Error())
+		return err
+	}
+	if replay.Rc.Rc == msg2.RespCode_rc_OK {
+		LogInfo("report success")
 		return nil
 	}
 	return nil
