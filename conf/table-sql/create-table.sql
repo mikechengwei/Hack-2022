@@ -44,7 +44,7 @@ CREATE TABLE `hackathon_task`
     `last_modified_by`   varchar(100) NOT NULL DEFAULT '' COMMENT '修改人',
     `maintainer`         varchar(100) NOT NULL DEFAULT '' COMMENT '维护人',
     `updated_at`         datetime null COMMENT '修改时间',
-    `finish_at`          datetime null COMMENT '完成时间',
+    `finished_at`          datetime NOT NULL DEFAULT '0000-00-00 00:00:00' COMMENT '完成时间',
     `deleted_at`         datetime COMMENT '删除时间',
     PRIMARY KEY (`id`),
     KEY                  `name` (`name`)
@@ -59,3 +59,17 @@ create table marvin
     RANDOM_STRING varchar(1000) NOT NULL DEFAULT '' COMMENT '随机字符串',
     PRIMARY KEY (`ID`)
 );
+
+CREATE TABLE `mcloud_middleware_env` (
+                                         `name` varchar(255) NOT NULL DEFAULT '' COMMENT '环境名称',
+                                         `key` varchar(255) NOT NULL DEFAULT '' COMMENT '标识名称',
+                                         `id` bigint(21) NOT NULL AUTO_INCREMENT COMMENT '应用自增id',
+                                         `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                         `created_by` varchar(100) NOT NULL DEFAULT '' COMMENT '创建人',
+                                         `last_modified_by` varchar(100) NOT NULL DEFAULT '' COMMENT '修改人',
+                                         `maintainer` varchar(100) NOT NULL DEFAULT '' COMMENT '维护人',
+                                         `updated_at` datetime DEFAULT NULL COMMENT '修改时间',
+                                         `deleted_at` datetime DEFAULT NULL COMMENT '删除时间',
+                                         PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,
+                                         KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=30069 COMMENT='中间件环境表'

@@ -24,6 +24,8 @@ func (t *TaskController) Post() {
 		t.ListTask()
 	case "startTask":
 		t.StartTask()
+	case "getTaskProgress":
+		t.GetTaskProgress()
 	default:
 		t.ErrorResp("action不支持", common.APICodeNotFoundPath, common.Newf("动作不支持"))
 	}
@@ -78,4 +80,20 @@ func (t *TaskController) StartTask() {
 	}
 	go service.TaskServiceImplement.StartTask(request.TaskId)
 	t.SuccessResp(nil)
+}
+
+func (t *TaskController) GetTaskProgress() {
+
+	var request *dto.StartTaskRequestDto
+	if err := json.Unmarshal(t.Ctx.Input.RequestBody, &request); err != nil {
+		t.ErrorResp(nil, common.APIParameterError, err)
+		return
+	}
+	result, err := service.TaskServiceImplement.GetTaskProgress(request.TaskId)
+	if err != nil {
+		t.ErrorResp(nil, common.APISystemError, err)
+		return
+	}
+
+	t.SuccessResp(result)
 }

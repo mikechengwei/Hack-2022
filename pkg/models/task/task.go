@@ -10,6 +10,7 @@ type MigrateTask struct {
 	ClientName string
 	Name       string
 	Key        string
+	TaskId     uint
 
 	Source        *TableInfo
 	Target        *TableInfo

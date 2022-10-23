@@ -21,9 +21,19 @@ type TaskResponse struct {
 }
 
 type TaskDto struct {
+	ID         uint      `json:"id"`
 	Name       string    `json:"name"`
 	Client     string    `json:"client"`
 	Status     int       `json:"status"`
 	CreateTime time.Time `json:"createTime"`
 	FinishTime time.Time `json:"finishTime"`
+}
+
+type TaskProgressDto struct {
+	Status  int    `json:"status"`
+	Content string `json:"content"`
+}
+
+type TaskTotal struct {
+	Total int `json:"total"`
 }

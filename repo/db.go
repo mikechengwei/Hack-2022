@@ -57,7 +57,7 @@ func OpenDb(datasource *entity.DataSource) (*gorm.DB, error) {
 		return nil, err
 	}
 	dbUrl := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", datasource.Username, datasource.Password, datasource.Host, datasource.Port, dbName)
-	db, err = gorm.Open(mysql.Open(dbUrl), &gorm.Config{
+	newDB, err := gorm.Open(mysql.Open(dbUrl), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
@@ -65,5 +65,5 @@ func OpenDb(datasource *entity.DataSource) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	return db, nil
+	return newDB, nil
 }

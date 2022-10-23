@@ -14,6 +14,8 @@ type TaskRepoInterface interface {
 	ListTask(pageNumber int, name string) ([]*entity.Task, *int64, error)
 
 	GetTask(taskId int) (result *entity.Task, err error)
+
+	UpdateStatus(taskId int, status int) error
 }
 type TaskRepo struct {
 }
@@ -39,4 +41,12 @@ func (t *TaskRepo) ListTask(pageNumber int, name string) ([]*entity.Task, *int64
 func (t *TaskRepo) GetTask(taskId int) (result *entity.Task, err error) {
 	err = repo.GetDB().Where("id = ?", taskId).Find(&result).Error
 	return result, err
+}
+
+func (ac *TaskRepo) UpdateStatus(taskId int, status int) error {
+	task := &entity.Task{}
+	if err := repo.GetDB().Debug().Table(task.TableName()).Where("id = ?", taskId).Update("status", status).Error; err != nil {
+		return err
+	}
+	return nil
 }

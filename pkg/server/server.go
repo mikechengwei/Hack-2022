@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/knullhhf/hack22/repo/task"
 	"io"
 	"net"
 	"strings"
@@ -32,6 +33,8 @@ type Server struct {
 	//
 	cliMtx        sync.Mutex
 	writerClients map[string]*WriterClient
+
+	KeyWithNameMap map[string]string
 	//
 	taskMtx        sync.Mutex
 	reportInterval int // second
@@ -201,8 +204,9 @@ func (server *Server) AddTask(task *task2.MigrateTask) error {
 	task.WriterSource = &storage2.SocketStorage{Reader: &storage2.SocketStorageReader{TaskManagerClient: cli.TaskManagerClient, TaskInfo: &msg2.ReqNewTask{
 		Cli: cli.Client,
 		Task: &msg2.TaskInfo{
-			Name: task.Name,
-			Key:  task.Key,
+			Name:   task.Name,
+			Key:    task.Key,
+			TaskId: int32(task.TaskId),
 			Source: &msg2.TableInfo{
 				Host:        task.Source.Host,
 				Port:        task.Source.Port,
@@ -229,8 +233,9 @@ func (server *Server) handle() {
 				if task.LightState != msg2.TaskState_ts_Create {
 					task.LightState = msg2.TaskState_ts_Create
 					server.newTask(writer.Client, &msg2.TaskInfo{
-						Name: task.Name,
-						Key:  task.Key,
+						Name:   task.Name,
+						Key:    task.Key,
+						TaskId: int32(task.TaskId),
 						Source: &msg2.TableInfo{
 							Host:        task.Source.Host,
 							Port:        task.Source.Port,
@@ -281,6 +286,8 @@ func (server *Server) Register(ctx context.Context, in *msg2.ReqRegister) (*msg2
 		FinishedTasks:     map[string]*task2.MigrateTask{},
 		RunningTasks:      map[string]*task2.MigrateTask{},
 	}
+
+	server.KeyWithNameMap[in.Cli.Name] = in.Cli.Key
 	server.cliMtx.Unlock()
 	LogInfof("new client(%s) registered", client.GetName())
 	return &msg2.ReplyRegister{Rc: net2.DefaultOkReplay()}, nil
@@ -293,6 +300,13 @@ func (server *Server) ReportTaskCurrentState(ctx context.Context, in *msg2.Repor
 	ct.FinishedTasks[in.Task.Name] = ct.RunningTasks[in.Task.Name]
 	ct.FinishedTasks[in.Task.Name].DumpState = in.State
 	delete(ct.RunningTasks, in.Task.Name)
+	var state int
+	if in.State == msg2.TaskState_ts_Exception {
+		state = 2
+	} else {
+		state = 3
+	}
+	task.TaskRepoImplement.UpdateStatus(int(in.Task.TaskId), state)
 	return &msg2.ReplyReport{Rc: net2.DefaultOkReplay()}, nil
 }
 
@@ -378,6 +392,7 @@ func (server *Server) Init(taskAddress string, sec int) {
 	server.reportInterval = sec
 	server.taskAddr = taskAddress
 	server.writerClients = map[string]*WriterClient{}
+	server.KeyWithNameMap = map[string]string{}
 
 	server.wg.Add(1)
 	go server.waitTaskCli(taskListener)
@@ -396,6 +411,7 @@ var (
 
 func RunServer() {
 	flag.Parse()
+
 	LightningServer.Init(*taskAddress, 1)
 	runGrpservererver(*address)
 }

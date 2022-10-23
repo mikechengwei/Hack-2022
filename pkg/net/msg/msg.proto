@@ -18,6 +18,7 @@ message  TaskInfo {
   string key = 2;
   TableInfo source = 3;
   TableInfo target = 4;
+  int32  taskId = 5;
 };
 
 message TableInfo {

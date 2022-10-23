@@ -144,6 +144,7 @@ func (cc *TaskService) DumpTableData(task *cliTask, cli *msg2.ClientInfo) {
 		conf.CsvDelimiter = "\""
 		conf.StatementSize = 2000000
 		conf.FileSize = 1024 * 1024 * 1024 //need to justify
+		conf.Consistency = "none"
 		ctx := context.TODO()
 		dumper, err := export.NewDumper(ctx, conf)
 		if err != nil {

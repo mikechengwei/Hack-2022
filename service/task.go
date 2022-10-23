@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/knullhhf/hack22/common"
 	"github.com/knullhhf/hack22/logger"
 	"github.com/knullhhf/hack22/models/dto"
@@ -23,6 +24,7 @@ type TaskServiceInterface interface {
 	CreateTask(task *dto.CreateTaskRequestDto) error
 	ListTask(task *dto.ListTaskRequestDto) (*dto.TaskResponse, error)
 	StartTask(taskId int) error
+	GetTaskProgress(taskId int) (string, error)
 }
 
 type TaskService struct {
@@ -48,6 +50,8 @@ func (t *TaskService) CreateTask(task *dto.CreateTaskRequestDto) error {
 		TargetImportMode: task.Target.ImportMode,
 		Concurrent:       task.Concurrent,
 		SyncSchema:       isSyncSchema,
+		FinishedAt:       time.Now(),
+		Status:           0,
 	}
 	err := task2.TaskRepoImplement.CreateTask(item)
 	if err != nil {
@@ -70,6 +74,7 @@ func (t *TaskService) ListTask(task *dto.ListTaskRequestDto) (*dto.TaskResponse,
 			FinishTime: t.FinishedAt,
 			Client:     t.SourceClient,
 			Status:     t.Status,
+			ID:         t.ID,
 		}
 		taskDto = append(taskDto, dto)
 	}
@@ -97,6 +102,7 @@ func (t *TaskService) StartTask(taskId int) error {
 		logger.LogErrf("get sourceDataSource err:%v", err)
 	}
 	cli := task.SourceClient
+	cli = server.LightningServer.KeyWithNameMap[cli]
 	for {
 		time.Sleep(time.Second)
 		_, e := server.LightningServer.FindCli(cli)
@@ -137,6 +143,7 @@ func (t *TaskService) StartTask(taskId int) error {
 	cfg.TiDB.User = targetDataSource[0].Username
 	cfg.TiDB.StatusPort = statusPort
 	cfg.TiDB.PdAddr = targetDataSource[0].PdAddress
+	cfg.TiDB.Psw = targetDataSource[0].Password
 	cfg.Mydumper.Filter = []string{"*.*", "!mysql.*", "!sys.*", "!INFORMATION_SCHEMA.*", "!PERFORMANCE_SCHEMA.*", "!METRICS_SCHEMA.*", "!INSPECTION_SCHEMA.*"}
 	cfg.TikvImporter.Backend = "local"
 	cfg.TikvImporter.SortedKVDir = "/tmp/lightning"
@@ -153,6 +160,7 @@ func (t *TaskService) StartTask(taskId int) error {
 			ClientName: cli,
 			Name:       task.Name,
 			Key:        task.Name,
+			TaskId:     task.ID,
 			Source: &task3.TableInfo{
 				Host:     sourceDataSource[0].Host,
 				Port:     int32(sourcePort),
@@ -171,5 +179,25 @@ func (t *TaskService) StartTask(taskId int) error {
 		server.LightningServer.AddTask(migrateTask)
 	}
 	return nil
+
+}
+
+func (t *TaskService) GetTaskProgress(taskId int) (string, error) {
+	task, err := task2.TaskRepoImplement.GetTask(taskId)
+	if err != nil {
+		return "", common.CommonError{Code: common.DbError, Detail: err}
+	}
+	database := task.TargetDatabase
+	tables := strings.Split(task.SourceTables, ",")
+	var result []string
+	for _, table := range tables {
+		distotal, total, err := datasource.DataSourceImplement.CountTargetDbData(task.TargetDatasource, database, table)
+		if err != nil {
+			continue
+		}
+		result = append(result, fmt.Sprintf("源表数据: %d|%s:%s 完成搬运: %d", distotal, database, table, total))
+	}
+
+	return strings.Join(result, "\n"), nil
 
 }

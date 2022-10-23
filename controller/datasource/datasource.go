@@ -42,6 +42,7 @@ func (d *DataSourceController) ListDataBase() {
 	result, err := service.DataSourceServiceImplement.ListDatabases(request.DataSourceId)
 	if err != nil {
 		d.Error(nil, err)
+		return
 	}
 	d.SuccessResp(result)
 }
